@@ -4,8 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMessage = document.getElementById('errorMessage');
     const simulationTableHeadRow = document.getElementById('tableHeaderRow');
     const simulationTableBody = document.querySelector('#simulationTable tbody');
+    const totalSimulationTimeInput = document.getElementById('totalSimulationTimeInput'); // 新增：获取总模拟时间输入框
 
-    const totalSimulationTime = 1500; // 秒
+    // const totalSimulationTime = 1500; // 移除：不再是固定值
     const actionDistance = 10000;     // 米
 
     let simulationHistory = [];
@@ -188,12 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 模拟主函数：一次性计算所有事件 ---
-    function runFullSimulation(initialMembersState, startTime = 0) {
+    function runFullSimulation(initialMembersState, startTime = 0, currentTotalSimulationTime) { // 接收总模拟时间参数
         const records = [];
         let membersState = initialMembersState.map(m => ({ ...m })); // 确保是深拷贝
         let currentSimulationTime = startTime;
 
-        while (currentSimulationTime < totalSimulationTime) {
+        while (currentSimulationTime < currentTotalSimulationTime) { // 使用传入的总模拟时间
             let nextActionTimes = membersState.map(m => calculateTimeToNextAction(m));
 
             let timeToNextAction = Math.min(...nextActionTimes);
@@ -203,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
 
-            if (currentSimulationTime + timeToNextAction > totalSimulationTime) {
+            if (currentSimulationTime + timeToNextAction > currentTotalSimulationTime) { // 使用传入的总模拟时间
                 break;
             }
 
@@ -233,17 +234,17 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        if (currentSimulationTime >= totalSimulationTime && records.length > 0 && records[records.length - 1].eventType !== "模拟结束") {
+        if (currentSimulationTime >= currentTotalSimulationTime && records.length > 0 && records[records.length - 1].eventType !== "模拟结束") { // 使用传入的总模拟时间
             records.push({
-                time: totalSimulationTime,
+                time: currentTotalSimulationTime, // 使用传入的总模拟时间
                 eventType: "模拟结束",
                 triggererName: "无",
                 triggeredMemberIndex: -1,
                 membersStateSnapshot: records[records.length - 1].membersStateSnapshot
             });
-        } else if (currentSimulationTime >= totalSimulationTime && records.length === 0 && startTime < totalSimulationTime) {
+        } else if (currentSimulationTime >= currentTotalSimulationTime && records.length === 0 && startTime < currentTotalSimulationTime) { // 使用传入的总模拟时间
             records.push({
-                time: totalSimulationTime,
+                time: currentTotalSimulationTime, // 使用传入的总模拟时间
                 eventType: "模拟结束",
                 triggererName: "无",
                 triggeredMemberIndex: -1,
@@ -256,6 +257,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 启动/重新启动整个模拟流程 ---
     function startOrRecalculateSimulation(isRecalculation = false, recalculationStartIndex = 0, recalculationInitialState = null) {
         errorMessage.textContent = '';
+
+        const currentTotalSimulationTime = parseFloat(totalSimulationTimeInput.value); // 获取总模拟时间
+
+        if (isNaN(currentTotalSimulationTime) || currentTotalSimulationTime <= 0) {
+            errorMessage.textContent = '请输入有效的总模拟时间（大于0的数字）。';
+            return;
+        }
 
         let initialMembers = [];
         let memberNames = [];
@@ -305,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTableHeader(memberNames);
         }
 
-        const newRecords = runFullSimulation(initialMembers, simulationStartActualTime);
+        const newRecords = runFullSimulation(initialMembers, simulationStartActualTime, currentTotalSimulationTime); // 传递总模拟时间
 
         const spliceIndex = isRecalculation ? recalculationStartIndex + 1 : 1;
         simulationHistory.splice(spliceIndex, simulationHistory.length - spliceIndex, ...newRecords);
@@ -346,8 +354,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const startMembersStateForSimulation = originalRecordOfModifiedRow.membersStateSnapshot.map(m => ({ ...m }));
 
         const simulationStartTime = originalRecordOfModifiedRow.time;
+        const currentTotalSimulationTime = parseFloat(totalSimulationTimeInput.value); // 获取当前的总模拟时间
 
-        const newSubsequentRecords = runFullSimulation(startMembersStateForSimulation, simulationStartTime);
+        const newSubsequentRecords = runFullSimulation(startMembersStateForSimulation, simulationStartTime, currentTotalSimulationTime); // 传递总模拟时间
 
         const preservedHistory = simulationHistory.slice(0, modifiedRowIndex + 1);
         simulationHistory = preservedHistory.concat(newSubsequentRecords);

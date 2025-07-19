@@ -96,6 +96,35 @@
         #simulationTable th:nth-child(1) { min-width: 40px; } /* 时间 */
         #simulationTable th:nth-child(2) { min-width: 50px; } /* 行动者 */
 
+        /* 固定左侧两列的表头 */
+        #simulationTable th:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 3; /* 最高层级，确保在最前 */
+            background-color: #ffffff; /* 明确设置为白色不透明 */
+        }
+        #simulationTable th:nth-child(2) {
+            position: sticky;
+            left: 40px; /* 第一列的宽度 */
+            z-index: 2; /* 次高层级 */
+            background-color: #ffffff; /* 明确设置为白色不透明 */
+        }
+
+        /* 固定左侧两列的表格数据单元格 */
+        #simulationTable td:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 1; /* 高于普通滚动单元格 */
+            background-color: #ffffff; /* 明确设置为白色不透明 */
+        }
+        #simulationTable td:nth-child(2) {
+            position: sticky;
+            left: 40px; /* 第一列的宽度 */
+            z-index: 1; /* 高于普通滚动单元格 */
+            background-color: #ffffff; /* 明确设置为白色不透明 */
+        }
+
+
         /* 队员速度和路程列的输入框和显示元素的通用样式 */
         #simulationTable td input[type="number"],
         #simulationTable td .base-speed-display,
@@ -125,7 +154,7 @@
 
 
         #simulationTable tr:nth-child(even) {
-            background-color: #f8f9fa;
+            background-color: #f8f9fa; /* 保持行的斑马纹背景 */
         }
         #simulationTable tbody tr:hover {
             background-color: #e2f2ff;
@@ -137,7 +166,7 @@
             font-weight: bold;
         }
         .triggered-cell {
-            background-color: #d4edda;
+            background-color: #d4edda; /* 触发者单元格背景，会覆盖白色背景 */
             color: #155724;
         }
         .error-message {
@@ -156,7 +185,7 @@
 <body>
 <div class="container">
     <h1>HSR排轴模拟器</h1>
-    <p>请输入四名队员的**姓名**和**原始速度**(少于四人的原始速度可以改为1)，总模拟时间1500行动值内</p>
+    <p>请输入四名队员的**姓名**和**原始速度**(少于四人的原始速度可以改为1)</p>
     <p class="info-message">提示：您可以在表格中直接修改队员的**变化速度**或**变化距离**(翁瓦克-4000，舞舞舞-2400等)。修改后，模拟结果将自动从该点开始重新计算并更新。</p>
 
     <div id="inputForm">
@@ -193,6 +222,11 @@
                 <label for="speed4">队员4速度:</label>
                 <input type="number" id="speed4" value="130" min="1" step="0.1">
             </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom: 20px;">
+            <label for="totalSimulationTimeInput">总模拟行动值:</label>
+            <input type="number" id="totalSimulationTimeInput" value="550" min="1" step="1">
         </div>
 
         <button id="simulateButton">开始模拟</button>
