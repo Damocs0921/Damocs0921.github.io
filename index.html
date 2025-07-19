@@ -139,19 +139,13 @@
             box-sizing: border-box; /* 确保 box-sizing 行为一致 */
             background: transparent; /* 背景透明 */
         }
-        /* 针对 delta speed input */
-        .delta-speed-input input[type="number"] {
-            border: 1px solid #ccc; /* 给可编辑的输入框加上边框 */
-            border-radius: 3px;
-            padding: 2px 0; /* 稍微增加内边距让它看起来像输入框 */
-        }
-        /* 针对 delta distance input (新加入) */
+        /* 针对 delta input (新加入) */
+        .delta-speed-input,
         .delta-distance-input {
             border: 1px solid #ccc; /* 给可编辑的输入框加上边框 */
             border-radius: 3px;
-            padding: 2px 0; /* 稍微增加内边距让它看起来像输入框 */
+            color: blue;
         }
-
 
         #simulationTable tr:nth-child(even) {
             background-color: #f8f9fa; /* 保持行的斑马纹背景 */
