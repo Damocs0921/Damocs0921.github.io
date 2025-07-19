@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const simulateButton = document.getElementById('simulateButton');
+    const exportExcelButton = document.getElementById('exportExcelButton'); // 获取导出按钮
     const errorMessage = document.getElementById('errorMessage');
     const simulationTableHeadRow = document.getElementById('tableHeaderRow');
     const simulationTableBody = document.querySelector('#simulationTable tbody');
@@ -30,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 固定列 (单位已移除)
         const timeHeader = document.createElement('th');
-        timeHeader.textContent = '时间'; // 原 '时间 (秒)'
+        timeHeader.textContent = '时间';
         simulationTableHeadRow.appendChild(timeHeader);
 
         const triggererHeader = document.createElement('th');
@@ -41,28 +42,28 @@ document.addEventListener('DOMContentLoaded', () => {
         names.forEach(name => {
             // 速度相关列
             const baseSpeedHeader = document.createElement('th');
-            baseSpeedHeader.textContent = `${name}原始速度`; // 原 `${name} 原始速度 (米/秒)`
+            baseSpeedHeader.textContent = `${name}原始速度`;
             simulationTableHeadRow.appendChild(baseSpeedHeader);
 
             const deltaSpeedHeader = document.createElement('th');
-            deltaSpeedHeader.textContent = `${name}变化速度`; // 原 `${name} 变化速度 (米/秒)`
+            deltaSpeedHeader.textContent = `${name}变化速度`;
             simulationTableHeadRow.appendChild(deltaSpeedHeader);
 
             const currentSpeedHeader = document.createElement('th');
-            currentSpeedHeader.textContent = `${name}实时速度`; // 原 `${name} 实时速度 (米/秒)`
+            currentSpeedHeader.textContent = `${name}实时速度`;
             simulationTableHeadRow.appendChild(currentSpeedHeader);
 
             // 剩余距离相关列
             const originalRemainingHeader = document.createElement('th');
-            originalRemainingHeader.textContent = `${name}原始剩余距离`; // 原 `${name} 原始剩余距离 (米)`
+            originalRemainingHeader.textContent = `${name}原始剩余距离`;
             simulationTableHeadRow.appendChild(originalRemainingHeader);
 
             const deltaDistanceHeader = document.createElement('th');
-            deltaDistanceHeader.textContent = `${name}变化距离`; // 原 `${name} 变化距离 (米)`
+            deltaDistanceHeader.textContent = `${name}变化距离`;
             simulationTableHeadRow.appendChild(deltaDistanceHeader);
 
             const realtimeRemainingHeader = document.createElement('th');
-            realtimeRemainingHeader.textContent = `${name}实时剩余距离`; // 原 `${name} 实时剩余距离 (米)`
+            realtimeRemainingHeader.textContent = `${name}实时剩余距离`;
             simulationTableHeadRow.appendChild(realtimeRemainingHeader);
         });
     }
@@ -354,9 +355,63 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTable();
     }
 
+    // --- 导出表格数据到 CSV ---
+    function exportTableToCsv(filename) {
+        if (simulationHistory.length <= 1) { // 只有初始状态或无数据
+            alert('没有模拟数据可以导出。请先运行模拟。');
+            return;
+        }
+
+        const headers = [];
+        // 获取表头
+        Array.from(simulationTableHeadRow.children).forEach(th => {
+            headers.push(`"${th.textContent.replace(/"/g, '""')}"`); // 确保双引号和转义
+        });
+        const csvRows = [];
+        csvRows.push(headers.join(','));
+
+        // 遍历模拟历史数据，构建CSV行
+        for (let i = 0; i < simulationHistory.length; i++) {
+            const record = simulationHistory[i];
+            const rowData = [];
+
+            // 固定列数据
+            rowData.push(record.time.toFixed(2));
+            rowData.push(`"${record.triggererName.replace(/"/g, '""')}"`);
+
+            // 队员的动态数据
+            record.membersStateSnapshot.forEach(member => {
+                rowData.push(member.baseSpeed.toFixed(2));
+                rowData.push(member.deltaSpeed.toFixed(2));
+                rowData.push(member.currentSpeed.toFixed(2));
+                rowData.push(Math.max(0, actionDistance - member.distanceCoveredSinceLastAction).toFixed(2));
+                rowData.push(member.deltaDistance.toFixed(2));
+                rowData.push(calculateRealtimeRemainingDistance(member).toFixed(2));
+            });
+            csvRows.push(rowData.join(','));
+        }
+
+        const csvString = '\uFEFF' + csvRows.join('\n'); // 添加BOM以支持中文
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click(); // 触发下载
+        URL.revokeObjectURL(link.href); // 释放URL对象
+    }
+
+
     // --- 绑定初始按钮事件 ---
     simulateButton.addEventListener('click', () => {
         startOrRecalculateSimulation(false);
+    });
+
+    // --- 绑定导出按钮事件 ---
+    exportExcelButton.addEventListener('click', () => {
+        const date = new Date();
+        const filename = `HSR排轴模拟结果_${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}_${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}.csv`;
+        exportTableToCsv(filename);
     });
 
     // --- 初始化按钮和输入框的默认值 ---

@@ -79,10 +79,10 @@
         }
         #simulationTable th, #simulationTable td {
             border: 1px solid #ddd;
-            padding: 4px; /* 统一内边距 */
+            padding: 2px; /* 统一内边距 */
             text-align: center;
             vertical-align: middle;
-            font-size: 11px; /* 统一字体大小 */
+            font-size: 9px; /* 统一字体大小 */
             white-space: nowrap; /* 关键：强制不换行，确保列宽由内容决定 */
             box-sizing: border-box; /* 确保 padding 和 border 包含在 width 内 */
         }
@@ -90,8 +90,12 @@
             background-color: #e9ecef;
             font-weight: bold;
             color: #495057;
-            min-width: 60px; /* 默认最小宽度 */
+            min-width: 30px; /* 默认最小宽度 */
         }
+        /* 固定列的宽度调整 */
+        #simulationTable th:nth-child(1) { min-width: 40px; } /* 时间 */
+        #simulationTable th:nth-child(2) { min-width: 50px; } /* 行动者 */
+
         /* 队员速度和路程列的输入框和显示元素的通用样式 */
         #simulationTable td input[type="number"],
         #simulationTable td .base-speed-display,
@@ -102,7 +106,7 @@
             padding: 0; /* 移除内部 padding，由 td 统一控制 */
             border: none; /* 移除边框，由 td 统一控制 */
             text-align: center;
-            font-size: 11px; /* 确保与 td 字体一致 */
+            font-size: 9px; /* 确保与 td 字体一致 */
             box-sizing: border-box; /* 确保 box-sizing 行为一致 */
             background: transparent; /* 背景透明 */
         }
@@ -185,12 +189,8 @@
                 <input type="number" id="speed4" value="130" min="1" step="0.1">
             </div>
         </div>
-<!--        <div class="member-input-group">-->
-<!--           -->
-<!--        </div>-->
 
         <button id="simulateButton">开始模拟</button>
-        <div class="error-message" id="errorMessage"></div>
     </div>
 
     <div id="results">
@@ -205,6 +205,7 @@
             <tbody>
             </tbody>
         </table>
+        <button id="exportExcelButton" style="background-color: #28a745;">导出csv</button> <div class="error-message" id="errorMessage"></div>
     </div>
 </div>
 
