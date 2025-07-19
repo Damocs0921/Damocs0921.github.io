@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const deltaSpeedInput = document.createElement('input');
             deltaSpeedInput.type = 'number';
             deltaSpeedInput.value = member.deltaSpeed.toFixed(2);
-            deltaSpeedInput.step = "0.1";
+            deltaSpeedInput.step = "1";
             deltaSpeedInput.classList.add('delta-speed-input');
             deltaSpeedInput.dataset.memberIndex = index;
             deltaSpeedInput.dataset.rowIndex = rowIndex;
