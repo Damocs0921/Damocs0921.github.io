@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const simulationTableBody = document.querySelector('#simulationTable tbody');
     const totalSimulationTimeInput = document.getElementById('totalSimulationTimeInput'); // 新增：获取总模拟时间输入框
 
-    // const totalSimulationTime = 1500; // 移除：不再是固定值
     const actionDistance = 10000;     // 米
 
     let simulationHistory = [];
@@ -319,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
         simulationHistory.splice(spliceIndex, simulationHistory.length - spliceIndex, ...newRecords);
 
         renderTable();
+        saveSimulationState(); // 模拟或重算后保存状态
     }
 
     // --- 渲染整个表格 ---
@@ -362,6 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
         simulationHistory = preservedHistory.concat(newSubsequentRecords);
 
         renderTable();
+        saveSimulationState(); // 模拟或重算后保存状态
     }
 
     // --- 导出表格数据到 CSV ---
@@ -410,6 +411,89 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(link.href); // 释放URL对象
     }
 
+    // --- 缓存功能：保存模拟状态 ---
+    function saveSimulationState() {
+        try {
+            const currentMembersInput = [];
+            for (let i = 1; i <= 4; i++) {
+                currentMembersInput.push({
+                    name: document.getElementById(`name${i}`).value,
+                    speed: parseFloat(document.getElementById(`speed${i}`).value)
+                });
+            }
+
+            const stateToSave = {
+                simulationHistory: simulationHistory,
+                initialInputs: {
+                    members: currentMembersInput,
+                    totalSimulationTime: parseFloat(totalSimulationTimeInput.value)
+                }
+            };
+            localStorage.setItem('hsrSimulationState', JSON.stringify(stateToSave));
+            console.log("Simulation state saved.");
+        } catch (e) {
+            console.error("Error saving simulation state:", e);
+            errorMessage.textContent = '保存模拟状态失败。可能浏览器存储已满。';
+        }
+    }
+
+    // --- 缓存功能：加载模拟状态 ---
+    function loadSimulationState() {
+        try {
+            const savedState = localStorage.getItem('hsrSimulationState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+
+                // 恢复输入框内容
+                parsedState.initialInputs.members.forEach((member, i) => {
+                    const nameInput = document.getElementById(`name${i + 1}`);
+                    const speedInput = document.getElementById(`speed${i + 1}`);
+                    if (nameInput) nameInput.value = member.name;
+                    if (speedInput) speedInput.value = member.speed;
+                });
+                if (totalSimulationTimeInput) {
+                    totalSimulationTimeInput.value = parsedState.initialInputs.totalSimulationTime;
+                }
+
+                // 恢复模拟历史
+                simulationHistory = parsedState.simulationHistory;
+
+                // 重新渲染表格和表头
+                if (simulationHistory.length > 0) {
+                    const memberNames = simulationHistory[0].membersStateSnapshot.map(m => m.name);
+                    updateTableHeader(memberNames);
+                    renderTable();
+                    console.log("Simulation state loaded.");
+                } else {
+                    // 如果历史是空的（比如只保存了初始输入），则设置默认值
+                    setInitialDefaultValues();
+                }
+            } else {
+                setInitialDefaultValues();
+            }
+        } catch (e) {
+            console.error("Error loading simulation state:", e);
+            errorMessage.textContent = '加载模拟状态失败。缓存数据可能已损坏。';
+            setInitialDefaultValues(); // 加载失败时使用默认值
+        }
+    }
+
+    // --- 初始化输入框的默认值 ---
+    function setInitialDefaultValues() {
+        document.getElementById('name1').value = '克拉拉';
+        document.getElementById('speed1').value = '90';
+        document.getElementById('name2').value = '停云';
+        document.getElementById('speed2').value = '175';
+        document.getElementById('name3').value = '驭空';
+        document.getElementById('speed3').value = '163';
+        document.getElementById('name4').value = '加拉赫';
+        document.getElementById('speed4').value = '168';
+        // 确保总模拟时间也有默认值，如果缓存中没有
+        if (!totalSimulationTimeInput.value) {
+            totalSimulationTimeInput.value = '550';
+        }
+    }
+
 
     // --- 绑定初始按钮事件 ---
     simulateButton.addEventListener('click', () => {
@@ -423,13 +507,6 @@ document.addEventListener('DOMContentLoaded', () => {
         exportTableToCsv(filename);
     });
 
-    // --- 初始化按钮和输入框的默认值 ---
-    document.getElementById('name1').value = '克拉拉';
-    document.getElementById('speed1').value = '90';
-    document.getElementById('name2').value = '停云';
-    document.getElementById('speed2').value = '175';
-    document.getElementById('name3').value = '驭空';
-    document.getElementById('speed3').value = '163';
-    document.getElementById('name4').value = '加拉赫';
-    document.getElementById('speed4').value = '168';
+    // 在页面加载时尝试加载缓存状态
+    loadSimulationState();
 });
